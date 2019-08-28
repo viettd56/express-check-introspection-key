@@ -5,12 +5,13 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
+        "prepublish": "npm run build",
         "build": "tsc",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
         "type": "git",
-        "url": "git@git.appota.com:acheckin/node_modules/express-check-introspection-key.git"
+        "url": "git@github.com:viettd56/express-check-introspection-key-.git"
     },
     "keywords": [],
     "author": "",
@@ -26,7 +27,7 @@
     },
     "husky": {
         "hooks": {
-            "pre-commit": "yarn build"
+            "pre-commit": "npm run build"
         }
     }
 }
