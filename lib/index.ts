@@ -1,21 +1,23 @@
 import * as express from 'express';
-const fss = require('fast-string-search');
+import { FieldDefinitionNode, parse, visit } from 'graphql';
 
-export const checkIntrospectionKey = (key: string): express.RequestHandler => {
+export const checkIntrospectionKey = (key: string, headerKey: string): express.RequestHandler => {
     return async (req, res, next) => {
         try {
             if (req.body && req.body.query) {
-                const query: string = req.body.query;
-                if (
-                    fss.indexOf(query.toLowerCase(), '__schema') > 0 ||
-                    fss.indexOf(query.toLowerCase(), '__type') > 0 ||
-                    fss.indexOf(query.toLowerCase(), 'introspectionquery') > 0
-                ) {
-                    const introspectionKey = req.headers['x-introspection-key'];
-                    if (introspectionKey !== key) {
-                        throw new Error('Introspection key invalid');
-                    }
-                }
+                visit(parse(req.body.query), {
+                    enter(node) {
+                        if (node.kind === 'Field') {
+                            const fieldNode = (node as unknown) as FieldDefinitionNode;
+                            if (fieldNode.name.value === '__schema' || fieldNode.name.value === '__type') {
+                                const introspectionKey = req.headers[headerKey];
+                                if (introspectionKey !== key) {
+                                    throw new Error('Introspection key invalid');
+                                }
+                            }
+                        }
+                    },
+                });
             }
             next();
         } catch (error) {
