@@ -36,22 +36,25 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
-var fss = require('fast-string-search');
-exports.checkIntrospectionKey = function (key) {
+var graphql_1 = require("graphql");
+exports.checkIntrospectionKey = function (key, headerKey) {
     return function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
-        var query, introspectionKey;
         return __generator(this, function (_a) {
             try {
                 if (req.body && req.body.query) {
-                    query = req.body.query;
-                    if (fss.indexOf(query.toLowerCase(), '__schema') > 0 ||
-                        fss.indexOf(query.toLowerCase(), '__type') > 0 ||
-                        fss.indexOf(query.toLowerCase(), 'introspectionquery') > 0) {
-                        introspectionKey = req.headers['x-introspection-key'];
-                        if (introspectionKey !== key) {
-                            throw new Error('Introspection key invalid');
-                        }
-                    }
+                    graphql_1.visit(graphql_1.parse(req.body.query), {
+                        enter: function (node) {
+                            if (node.kind === 'Field') {
+                                var fieldNode = node;
+                                if (fieldNode.name.value === '__schema' || fieldNode.name.value === '__type') {
+                                    var introspectionKey = req.headers[headerKey];
+                                    if (introspectionKey !== key) {
+                                        throw new Error('Introspection key invalid');
+                                    }
+                                }
+                            }
+                        },
+                    });
                 }
                 next();
             }
